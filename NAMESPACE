@@ -1,2 +1,3 @@
 export(SIRsample)
 export(SIRsim)
+export(lazyABC)
