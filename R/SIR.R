@@ -57,16 +57,16 @@ SIRsim <- function(beta, gamma, S0, I0, R0, t0, norm_beta=TRUE, t_end=Inf, step_
         if (step==step_end || I==0) break;
     }
     if (thinning==0) {
-        output <- c(step,S,I,R,t,proc.time()[3]-start_time)
-        names(output) <- c("step","S","I","R","t","elapsed")
+        output <- data.frame(step=step,S=S,I=I,R=R,t=t,elapsed=proc.time()[3]-start_time, row.names="final")
     } else {
         if (thincounter>1) {
             output[recordedsofar+1,] <- c(step,S,I,R,t,proc.time()[3]-start_time)
             recordedsofar <- recordedsofar+1
         }        
         output <- output[seq(1,recordedsofar),,drop=FALSE]
+        output <- data.frame(output)
     }
-    return(data.frame(output))
+    return(output)
 }
 
 #' @export
