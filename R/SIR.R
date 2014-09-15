@@ -15,7 +15,7 @@
 #' @param t_end Time at which the simulation will terminate
 #' @param step_end Number of steps after which the simulation will terminate
 #' @param thinning An integer determining what type of output to return. Zero gives the final state. A positive value thins the output by this factor i.e. \code{output=1} gives all output, \code{output=2} gives results for step 0,2,4,... The final state is always returned.
-#' @return If \code{thinning>0} a matrix is returned with columns step (number of steps performed), S, I, R (state at this step) and elapsed (computer time taken). The steps reported depend on the thinning variable. If \code{thinning==0} then only the final step is returned, as a vector.
+#' @return A dataframe with columns step (number of steps performed), S, I, R (state at this step) and elapsed (computer time taken). The steps reported depend on the thinning variable.
 
 #' @export
 SIRsim <- function(beta, gamma, S0, I0, R0, t0, norm_beta=TRUE, t_end=Inf, step_end=Inf, thinning=0) {
@@ -66,7 +66,7 @@ SIRsim <- function(beta, gamma, S0, I0, R0, t0, norm_beta=TRUE, t_end=Inf, step_
         }        
         output <- output[seq(1,recordedsofar),,drop=FALSE]
     }
-    return(output)
+    return(data.frame(output))
 }
 
 #' @export
