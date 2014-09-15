@@ -35,7 +35,7 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
             astar <- alpha(sim1$I)
             if (runif(1)<=astar) { ##Continuation
                 early_stopping <- FALSE
-                sim2 <- SIRsim(betastar, gammastar, S0=sim1$S, I0=sim1$I, R0=sim1$R, step_end=Inf, thinning=0)
+                sim2 <- SIRsim(betastar, gammastar, S0=sim1$S, I0=sim1$I, R0=sim1$R, t0=0, step_end=Inf, thinning=0)
                 ystar <- SIRsample(N=S0+I0+R0, R=sim2$R, n=n.subsample)
             } else { ##Early stopping
                 early_stopping <- TRUE
