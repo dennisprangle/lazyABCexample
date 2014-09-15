@@ -3,7 +3,7 @@
 \title{Markovian SIR epidemic model}
 \usage{
 SIRsim(beta, gamma, S0, I0, R0, t0, norm_beta = TRUE, t_end = Inf,
-  step_end = Inf)
+  step_end = Inf, thinning = 0)
 }
 \arguments{
   \item{beta}{The infection parameter}
@@ -25,11 +25,19 @@ SIRsim(beta, gamma, S0, I0, R0, t0, norm_beta = TRUE, t_end = Inf,
 
   \item{step_end}{Number of steps after which the
   simulation will terminate}
+
+  \item{thinning}{An integer determining what type of
+  output to return. Zero gives the final state. A positive
+  value thins the output by this factor i.e.
+  \code{output=1} gives all output, \code{output=2} gives
+  results for step 0,2,4,...}
 }
 \value{
-A matrix with S, I, R, t (these 4 are the model output) and
-elapsed (computer time taken) columns is returned.  This
-includes the initial state.
+If \code{thinning>0} a matrix is returned with columns step
+(number of steps performed), S, I, R (state at this step)
+and elapsed (computer time taken). The steps reported
+depend on the thinning variable. If \code{thinning==0} then
+only the final step is returned, as a vector.
 }
 \description{
 Functions to simulate from a Markovian SIR epidemic model.
