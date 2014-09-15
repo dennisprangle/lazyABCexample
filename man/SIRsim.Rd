@@ -30,14 +30,13 @@ SIRsim(beta, gamma, S0, I0, R0, t0, norm_beta = TRUE, t_end = Inf,
   output to return. Zero gives the final state. A positive
   value thins the output by this factor i.e.
   \code{output=1} gives all output, \code{output=2} gives
-  results for step 0,2,4,...}
+  results for step 0,2,4,... The final state is always
+  returned.}
 }
 \value{
-If \code{thinning>0} a matrix is returned with columns step
-(number of steps performed), S, I, R (state at this step)
-and elapsed (computer time taken). The steps reported
-depend on the thinning variable. If \code{thinning==0} then
-only the final step is returned, as a vector.
+A dataframe with columns step (number of steps performed),
+S, I, R (state at this step) and elapsed (computer time
+taken). The steps reported depend on the thinning variable.
 }
 \description{
 Functions to simulate from a Markovian SIR epidemic model.
