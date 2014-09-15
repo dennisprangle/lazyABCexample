@@ -1,0 +1,2 @@
+export(SIRsample)
+export(SIRsim)

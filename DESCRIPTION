@@ -1,0 +1,11 @@
+Package: lazyABCexample
+Type: Package
+Title: Implements example in "Lazy ABC" paper
+Version: 0.1
+Date: 2014-09-15
+Author: Dennis Prangle
+Maintainer: Dennis Prangle <d.b.prangle@reading.ac.uk>
+Depends:
+    parallel
+Description: Implements the epidemics example from the the "lazy ABC" paper.
+License: GPL (>=2)
