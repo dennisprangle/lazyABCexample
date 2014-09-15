@@ -31,8 +31,15 @@ lazyABC(yobs, n.its, eps, stopstep, alpha = NULL, parallel = TRUE,
 
   \item{n.subsample}{Size of subsample}
 }
+\value{
+A list comprising: ABCsample - dataframe of R0 and weight;
+time - sum of elapsed time in each core.
+}
 \description{
-Perform lazy ABC on the SIR epidemic example or, as a
-special case, perform ordinary ABC
+Perform rejection sampling lazy ABC on the SIR epidemic
+example or, as a special case, perform ordinary ABC
+}
+\details{
+Prior is gamma=1 and beta~Exp(1) (equivalently R0~Exp(1).)
 }
 

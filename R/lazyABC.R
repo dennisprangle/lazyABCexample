@@ -13,7 +13,9 @@
 #' @param R0 Initial number recovered
 #' @param n.subsample Size of subsample
 #'
-#' @return A list comprising: ABCsample - dataframe of R0 and weight.
+#' @details Prior is gamma=1 and beta~Exp(1) (equivalently R0~Exp(1).)
+#' 
+#' @return A list comprising: ABCsample - dataframe of R0 and weight; time - sum of elapsed time in each core.
 #'
 #' @export
 lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
