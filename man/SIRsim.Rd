@@ -39,16 +39,14 @@ S, I, R (state at this step) and elapsed (computer time
 taken). The steps reported depend on the thinning variable.
 }
 \description{
-Functions to simulate from a Markovian SIR epidemic model.
+Simulate from a Markovian SIR epidemic model.
 }
 \details{
-\code{SIRsim} performs a simulation.  This terminates when
+This function performs a simulation.  This terminates when
 (a) the specified time is reached or (b) the specified
 number of steps have been performed or (c) zero infectious
 remain.  A simulation terminated for (a) or (b) can be
 continued by starting another simulation from the final
-state. \code{SIRsample} supposes a sample of n are taken
-from a population of N of whom R are recovered, and returns
-the number of the sample who are found to be recovered.
+state.
 }
 

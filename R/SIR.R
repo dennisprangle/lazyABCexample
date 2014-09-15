@@ -1,9 +1,8 @@
 #' Markovian SIR epidemic model
 #'
-#' Functions to simulate from a Markovian SIR epidemic model.
+#' Simulate from a Markovian SIR epidemic model.
 #'
-#' \code{SIRsim} performs a simulation.  This terminates when (a) the specified time is reached or (b) the specified number of steps have been performed or (c) zero infectious remain.  A simulation terminated for (a) or (b) can be continued by starting another simulation from the final state.
-#' \code{SIRsample} supposes a sample of n are taken from a population of N of whom R are recovered, and returns the number of the sample who are found to be recovered.
+#' This function performs a simulation.  This terminates when (a) the specified time is reached or (b) the specified number of steps have been performed or (c) zero infectious remain.  A simulation terminated for (a) or (b) can be continued by starting another simulation from the final state.
 #'
 #' @param beta The infection parameter
 #' @param gamma Recovery rate
@@ -69,6 +68,15 @@ SIRsim <- function(beta, gamma, S0, I0, R0, t0, norm_beta=TRUE, t_end=Inf, step_
     return(output)
 }
 
+#' Sample from a SIR output
+#'
+#' Number recovered in a subsample of SIR output
+#' 
+#' Takes a sample of n from a population of N of whom R are recovered, and returns the number of the sample who are found to be recovered.
+#' @param N Total population size
+#' @param R Number recovered in population
+#' @param n Subsample size
+#' @return Number recovered in subsample
 #' @export
 SIRsample <- function(N, R, n) {
     rhyper(1, R, N-R, n)
