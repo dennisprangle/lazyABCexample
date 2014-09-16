@@ -13,7 +13,7 @@
 #' @param R0 Initial number recovered
 #' @param n.subsample Size of subsample
 #'
-#' @details Prior is gamma=1 and beta~Exp(1) (equivalently R0~Exp(1).)
+#' @details Prior is gamma=1 and beta~Gamma(5,1) (equivalently R0~Gamma(5,1))
 #' 
 #' @return A list comprising: ABCsample - dataframe of R0 and weight; time - sum of elapsed time in each core.
 #'
@@ -22,7 +22,7 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
                     S0=1E6, I0=1, R0=0, n.subsample=100) {
     doiteration <- function() { ##A single lazy ABC iteration
         t0 <- proc.time()[3]
-        betastar <- rexp(1)
+        betastar <- rgamma(1, shape=5, scale=1)
         gammastar <- 1
         sim1 <- SIRsim(betastar, gammastar, S0, I0, R0, t0=0, step_end=stopstep, thinning=0)
         if (sim1$I == 0) {

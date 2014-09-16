@@ -40,6 +40,7 @@ Perform rejection sampling lazy ABC on the SIR epidemic
 example or, as a special case, perform ordinary ABC
 }
 \details{
-Prior is gamma=1 and beta~Exp(1) (equivalently R0~Exp(1).)
+Prior is gamma=1 and beta~Gamma(5,1) (equivalently
+R0~Gamma(5,1))
 }
 
