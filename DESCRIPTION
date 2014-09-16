@@ -7,5 +7,7 @@ Author: Dennis Prangle
 Maintainer: Dennis Prangle <d.b.prangle@reading.ac.uk>
 Depends:
     parallel
+Suggests:
+    magrittr
 Description: Implements the epidemics example from the the "lazy ABC" paper.
 License: GPL (>=2)
