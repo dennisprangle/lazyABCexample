@@ -22,7 +22,7 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
                     S0=1E6, I0=1, R0=0, n.subsample=100) {
     doiteration <- function() { ##A single lazy ABC iteration
         t0 <- proc.time()[3]
-        betastar <- rgamma(1, shape=5, scale=1)
+        betastar <- rgamma(1, shape=3, scale=1)
         gammastar <- 1
         sim1 <- SIRsim(betastar, gammastar, S0, I0, R0, t0=0, step_end=stopstep, thinning=0)
         if (sim1$I == 0) {
