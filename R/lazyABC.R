@@ -15,7 +15,7 @@
 #'
 #' @details Prior is gamma=1 and beta~Gamma(5,1) (equivalently R0~Gamma(5,1))
 #' 
-#' @return A list comprising: ABCsample - dataframe of R0 and weight; time - sum of elapsed time in each core.
+#' @return A list comprising: ABCsample - dataframe of R0, weight and dist; time - sum of elapsed time in each core.
 #'
 #' @export
 lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
@@ -43,12 +43,13 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
         }
         if (early_stopping) {
             t1 <- proc.time()[3]
-            out <- c(R0=betastar, weight=0, time=t1-t0)
+            out <- c(R0=betastar, weight=0, time=t1-t0, dist=NA)
         } else {
-            lstarABC <- abs(ystar-yobs) <= eps
+            d <- abs(ystar-yobs)
+            lstarABC <- (d <= eps)
             w <- lstarABC / astar ##Assume importance weight equals prior
             t1 <- proc.time()[3]
-            out <- c(R0=betastar, weight=w, time=t1-t0)
+            out <- c(R0=betastar, weight=w, time=t1-t0, dist=d)
         }
         return(out)
     }
