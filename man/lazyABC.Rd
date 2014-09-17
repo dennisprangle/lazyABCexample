@@ -35,5 +35,6 @@ Perform rejection sampling lazy ABC on the SIR epidemic example or, as a special
 }
 \details{
 Prior is gamma=1 and beta~Gamma(5,1) (equivalently R0~Gamma(5,1))
+Random seeds \code{1:n.its} are used for the simulations. This is done in such a way that the ith simulation, if run to completion, will be the same regardless of alpha.
 }
 

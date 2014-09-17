@@ -13,15 +13,19 @@
 #' @param R0 Initial number recovered
 #' @param n.subsample Size of subsample
 #'
-#' @details Prior is gamma=1 and beta~Gamma(5,1) (equivalently R0~Gamma(5,1))
+#' @details
+#' Prior is gamma=1 and beta~Gamma(5,1) (equivalently R0~Gamma(5,1))
+#' Random seeds \code{1:n.its} are used for the simulations. This is done in such a way that the ith simulation, if run to completion, will be the same regardless of alpha.
 #' 
 #' @return A list comprising: ABCsample - dataframe of R0, weight and dist; time - sum of elapsed time in each core.
 #'
 #' @export
 lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
                     S0=1E6, I0=1, R0=0, n.subsample=100) {
-    doiteration <- function() { ##A single lazy ABC iteration
+    doiteration <- function(seed) { ##A single lazy ABC iteration
         t0 <- proc.time()[3]
+        set.seed(seed)
+        udraw <- runif(1) ##To be used in continuation decision. Draw now so it can't affect later random number sequence.
         betastar <- rgamma(1, shape=3, scale=1)
         gammastar <- 1
         sim1 <- SIRsim(betastar, gammastar, S0, I0, R0, t0=0, step_end=stopstep, thinning=0)
@@ -33,7 +37,7 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
         } else {
             ##Consider early stopping
             astar <- alpha(sim1$I)
-            if (runif(1)<=astar) { ##Continuation
+            if (udraw<=astar) { ##Continuation
                 early_stopping <- FALSE
                 sim2 <- SIRsim(betastar, gammastar, S0=sim1$S, I0=sim1$I, R0=sim1$R, t0=0, step_end=Inf, thinning=0)
                 ystar <- SIRsample(N=S0+I0+R0, R=sim2$R, n=n.subsample)
@@ -54,7 +58,7 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
         return(out)
     }
     if (parallel) {
-        samp <- mclapply(1:n.its, function(i){ doiteration() },
+        samp <- mclapply(1:n.its, function(i){ doiteration(i) },
                          mc.preschedule=FALSE)
         samp <- do.call(rbind, samp)
     } else {
