@@ -5,7 +5,7 @@ require(parallel)
 R0.true <- 2
 set.seed(1)
 Rtrue <- SIRsim(R0.true,1,1E5-1E3,1E3,0,0)$R
-Robs <- SIRsample(1E5, Rtrue, 100) ##84
+Robs <- SIRsample(1E5, Rtrue, 100) ##73
 
 ##Ordinary ABC
 myeps <- 10
@@ -87,13 +87,16 @@ eff.est <- function(lambda) {
 }
 
 tomin <- function(lambda) -eff.est(lambda)
-optimise(tomin, lower=0, upper=1E4)
+temp <- optimise(tomin, lower=0, upper=1E4)
+temp
+lambda.opt <- temp$minimum
+eff.est(lambda.opt, plot=TRUE)
 
 ##Do lazy ABC with optimal alpha
 alpha.opt <- function(I1000) {
     T2bar <- predict(fit.tbar, data.frame(icov=I1000))
     gamma <- hitPr(I1000, Robs, 10)
-    min(1, 1.539693 * sqrt(gamma/T2bar))
+    min(1, lambda.opt * sqrt(gamma/T2bar))
 }
 
 res.lazy2 <- lazyABC(Robs, 1E3, eps=10, stopstep=1000,
