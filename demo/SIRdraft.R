@@ -21,6 +21,7 @@ res.lazy1 <- lazyABC(Robs, 1E3, eps=myeps, stopstep=1000,
 n.train <- 1E3
 R0.train <- rgamma(n.train, shape=3, scale=1)
 trainingsim <- function(i) {
+    set.seed(i+n.train) ##(a) Reproducable (b) Different seeds to lazyABC code
     out <- SIRsim(R0.train[i],1,1E5-1E3,1E3,0,0,thinning=1000)
     out <- cbind(out, train.it=i)
     return(out)
