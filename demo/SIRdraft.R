@@ -9,7 +9,7 @@ Robs <- SIRsample(1E5, Rtrue, 100) ##73
 
 ##Ordinary ABC
 myeps <- 10
-res.ord <- lazyABC(Robs, 1E3, eps=myeps, stopstep=Inf,
+res.ord <- lazyABC(Robs, 1E4, eps=myeps, stopstep=Inf,
                    S0=1E5-1E3, I0=1E3, R0=0)
 
 ##Ad-hoc lazy ABC

@@ -12,6 +12,7 @@
 #' @param I0 Initial number infectious
 #' @param R0 Initial number recovered
 #' @param n.subsample Size of subsample
+#' @param quiet Whether to suppress progress messages
 #'
 #' @details
 #' Prior is gamma=1 and beta~Gamma(5,1) (equivalently R0~Gamma(5,1))
@@ -21,10 +22,11 @@
 #'
 #' @export
 lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
-                    S0=1E6, I0=1, R0=0, n.subsample=100) {
-    doiteration <- function(seed) { ##A single lazy ABC iteration
+                    S0=1E6, I0=1, R0=0, n.subsample=100, quiet=FALSE) {
+    doiteration <- function(i) { ##A single lazy ABC iteration
         t0 <- proc.time()[3]
-        set.seed(seed)
+        if (!quiet && i %% 100 == 0) cat("Iteration ", i, "\n")
+        set.seed(i)
         udraw <- runif(1) ##To be used in continuation decision. Draw now so it can't affect later random number sequence.
         betastar <- rgamma(1, shape=3, scale=1)
         gammastar <- 1
