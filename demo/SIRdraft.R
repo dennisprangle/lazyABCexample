@@ -8,12 +8,12 @@ Rtrue <- SIRsim(R0.true,1,1E5-1E3,1E3,0,0)$R
 Robs <- SIRsample(1E5, Rtrue, 100) ##73
 
 ##Ordinary ABC
-myeps <- 10
+myeps <- 1
 res.ord <- lazyABC(Robs, 1E4, eps=myeps, stopstep=Inf,
                    S0=1E5-1E3, I0=1E3, R0=0)
 
 ##Ad-hoc lazy ABC
-res.lazy1 <- lazyABC(Robs, 1E3, eps=myeps, stopstep=1000,
+res.lazy1 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
                      alpha=function(I1000){ if(I1000<1000) { 0.1 } else { 1 } },
                      S0=1E5-1E3, I0=1E3, R0=0)
 
@@ -40,16 +40,12 @@ elapsed.final <- sapply(1:n.train,
                             x <- temp[[i]]
                             tail(x, n=1)$elapsed
                       }) ##Total elapsed time of each training run
-train.1000 <- sapply(1:n.train,
+train.1000 <- lapply(1:n.train,
                       function(i) {
                           x <- temp[[i]]
-                          if (nrow(x)>10) {
-                              return x[10,]
-                          } else {
-                              return rep(NA, ?)
-                          }
+                          x[2,] ##n.b. process runs at least 1000 steps so it's guaranteed that this row correspond to step 1000
                       }) ##State after 1000 steps from each training run
-##TO DO: TRANSPOSE train.1000? AND REMOVE NAs.
+train.1000 <- do.call(rbind, train.1000)
 
 ##Compare training data at a particular time step to observations
 I1000 <- train.1000$I ##I1000 from training data
@@ -106,6 +102,6 @@ alpha.opt <- function(I1000) {
     gamma <- hitPr(I1000, Robs, 10)
     min(1, lambda.opt * sqrt(gamma/T2bar))
 }
-res.lazy2 <- lazyABC(Robs, 1E3, eps=10, stopstep=1000,
+res.lazy2 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
                      alpha=alpha.opt,
                      S0=1E5-1E3, I0=1E3, R0=0)
