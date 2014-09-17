@@ -73,11 +73,14 @@ respT <- elapsed.total - train.subset$elapsed
 plot(subset.I, respT)
 fit.tbar <- gam(respT ~ s(icov))
 lines(xx, predict(fit.tbar, data.frame(icov=xx)), col="red")
-T2bar <- predict(fit.tbar)
-T1bar <- mean(train.subset$elapsed)
-Tstan <- T1bar+mean(T2bar)
+##T2bar <- predict(fit.tbar)
+##T1bar <- mean(train.subset$elapsed)
+##Tstan <- T1bar+mean(T2bar)
 
 ##Function to estimate efficiency
+eff.est <- make.effest(phi=icov, gamma=gamma.train, T2=predict(fit.tbar), T1bar=mean(train.subset$elapsed))
+
+
 eff.est <- function(lambda) {
     alpha.train <- pmin(1, lambda*sqrt(gamma.train/T2bar)) #Continuation probability
     plot(icov, alpha.train)
