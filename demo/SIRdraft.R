@@ -27,79 +27,85 @@ trainingsim <- function(i) {
     return(out)
 }
 temp <- mclapply(1:n.train, trainingsim, mc.preschedule=FALSE)
+
+##Process training data
 train.final <- sapply(1:n.train,
                       function(i) {
                           x <- temp[[i]]
                           myR <- tail(x, n=1)$R
                           SIRsample(1E5+1, myR, 100)
-                      })
+                      }) ##Observation from each training run
 elapsed.final <- sapply(1:n.train,
                         function(i) {
                             x <- temp[[i]]
                             tail(x, n=1)$elapsed
-                      })
-train.all <- do.call(rbind, temp)
+                      }) ##Total elapsed time of each training run
+train.1000 <- sapply(1:n.train,
+                      function(i) {
+                          x <- temp[[i]]
+                          if (nrow(x)>10) {
+                              return x[10,]
+                          } else {
+                              return rep(NA, ?)
+                          }
+                      }) ##State after 1000 steps from each training run
+##TO DO: TRANSPOSE train.1000? AND REMOVE NAs.
 
 ##Compare training data at a particular time step to observations
-train.subset <- train.all[train.all$step==1E3,]
-subset.I <- train.subset$I
-subset.Rfinal <- train.final[train.subset$train.it]
-subset.diff <- abs(subset.Rfinal - Robs)
-plot(subset.I, subset.Rfinal)
+I1000 <- train.1000$I ##I1000 from training data
+train.obs <- train.final[train.1000$train.it] ##Observations corresponding to I1000
+train.diff <- abs(train.obs - Robs)
+plot(I1000, train.obs)
 
 ##Fit a non-linear regression of observable data on decision statistic
-resp <- cbind(success=subset.Rfinal, fail=100-subset.Rfinal) ##Correct form for glm-like function
-icov <- subset.I ##Simple variable name for glm-like function
-fit <- gam(resp ~ s(icov), family=binomial)
-zz <- predict(fit, type="response")
-points(icov, 100*zz, col="red")
-points(subset.I, qbinom(p=0.025, size=100, prob=zz), col="green")
-points(subset.I, qbinom(p=0.975, size=100, prob=zz), col="green")
-##Estimate gamma (or "hit probability") given decision statistic
-hitPr <- function(icov, Robs, eps) {
-    p <- predict(fit, newdata=data.frame(icov=icov), type="response")
+resp <- cbind(success=train.obs, fail=100-train.obs) ##Form needed for glm-like function
+fit.resp <- gam(resp ~ s(I1000), family=binomial)
+
+##Check non-linear regression by plotting predictions and CIs
+zz <- predict(fit.resp, type="response")
+points(I1000, 100*zz, col="red")
+points(I1000, qbinom(p=0.025, size=100, prob=zz), col="green")
+points(I1000, qbinom(p=0.975, size=100, prob=zz), col="green")
+
+##Estimate gamma (aka "hit probability") given decision statistic
+hitPr <- function(I1000, Robs, eps) {
+    p <- predict(fit.resp, newdata=data.frame(I1000=I1000), type="response")
     sapply(p, function(q) dbinom(seq(Robs-eps,Robs+eps), size=100, prob=q) %>% sum)
 }
-xx <- seq(min(icov), max(icov), length.out=100)
+
+##Plot hit probability
+xx <- seq(min(I1000), max(I1000), length.out=100)
 plot(xx, hitPr(xx, Robs, myeps), type='l')
-##Estimate gamma just for training data
-temp <- predict(fit, type="response")
+
+##Estimate gamma on training data
+temp <- predict(fit.resp, type="response")
 gamma.train <- sapply(temp, function(q) dbinom(seq(Robs-myeps,Robs+myeps), size=100, prob=q) %>% sum)
 
 ##Fit a non-linear regression of time remaining given decision statistic
-respT <- elapsed.final - train.subset$elapsed
-plot(subset.I, respT)
-fit.tbar <- gam(respT ~ s(icov))
-lines(xx, predict(fit.tbar, data.frame(icov=xx)), col="red")
+respT <- elapsed.final - train.1000$elapsed
+fit.tbar <- gam(respT ~ s(I1000))
+
+##Plot time regression against data as a check
+plot(I1000, respT)
+lines(xx, predict(fit.tbar, data.frame(I1000=xx)), col="red")
 
 ##Function to estimate efficiency
-eff.est <- make.effest(phi=icov, gamma=gamma.train, T2=predict(fit.tbar), T1bar=mean(train.subset$elapsed))
+eff.est <- make.effest(phi=I1000, gamma=gamma.train, T2=predict(fit.tbar), T1bar=mean(train.1000$elapsed))
 
-
-eff.est <- function(lambda) {
-    alpha.train <- pmin(1, lambda*sqrt(gamma.train/T2bar)) #Continuation probability
-    plot(icov, alpha.train)
-    sumw2.base <- sum(gamma.train)
-    sumw2 <- sum(gamma.train/alpha.train, na.rm=TRUE) ##Expected sum of weights^2.  na.rm takes care of cases where gamma.train=alpha.train=0.
-    t.base <- Tstan*n.train
-    t.lazy <- T1bar*n.train + mean(T2bar)*sum(alpha.train) ##E(1st stage time)*number of iterations + E(2nd stage time)*expected number of continuations
-    ##cat(lambda, t.base, t.lazy, sumw, sumw2, sumw/sumw2, t.base*sumw / (t.lazy*sumw2), "\n")
-    t.base*sumw2.base / (t.lazy*sumw2)
-}
-
+##Choose lambda to optimise efficiency
 tomin <- function(lambda) -eff.est(lambda)
 temp <- optimise(tomin, lower=0, upper=1E4)
 temp
 lambda.opt <- temp$minimum
+##Plot optimal choice of alpha
 eff.est(lambda.opt, plot=TRUE)
 
 ##Do lazy ABC with optimal alpha
 alpha.opt <- function(I1000) {
-    T2bar <- predict(fit.tbar, data.frame(icov=I1000))
+    T2bar <- predict(fit.tbar, data.frame(I1000=I1000))
     gamma <- hitPr(I1000, Robs, 10)
     min(1, lambda.opt * sqrt(gamma/T2bar))
 }
-
 res.lazy2 <- lazyABC(Robs, 1E3, eps=10, stopstep=1000,
                      alpha=alpha.opt,
                      S0=1E5-1E3, I0=1E3, R0=0)
