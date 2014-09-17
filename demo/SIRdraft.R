@@ -1,3 +1,6 @@
+require(magrittr)
+require(mgcv)
+require(parallel)
 ##Simulate true data
 R0.true <- 2
 set.seed(1)
@@ -5,16 +8,16 @@ Rtrue <- SIRsim(R0.true,1,1E5-1E3,1E3,0,0)$R
 Robs <- SIRsample(1E5, Rtrue, 100) ##84
 
 ##Ordinary ABC
-res.ord <- lazyABC(Robs, 1E3, eps=10, stopstep=Inf,
+myeps <- 10
+res.ord <- lazyABC(Robs, 1E3, eps=myeps, stopstep=Inf,
                    S0=1E5-1E3, I0=1E3, R0=0)
 
 ##Ad-hoc lazy ABC
-res.lazy1 <- lazyABC(Robs, 1E3, eps=10, stopstep=1000,
+res.lazy1 <- lazyABC(Robs, 1E3, eps=myeps, stopstep=1000,
                      alpha=function(I1000){ if(I1000<1000) { 0.1 } else { 1 } },
                      S0=1E5-1E3, I0=1E3, R0=0)
 
 ##Sample training data
-require(magrittr)
 n.train <- 1E3
 R0.train <- rgamma(n.train, shape=3, scale=1)
 trainingsim <- function(i) {
@@ -22,7 +25,6 @@ trainingsim <- function(i) {
     out <- cbind(out, train.it=i)
     return(out)
 }
-require(parallel)
 temp <- mclapply(1:n.train, trainingsim, mc.preschedule=FALSE)
 train.final <- sapply(1:n.train,
                       function(i) {
@@ -45,7 +47,6 @@ subset.diff <- abs(subset.Rfinal - Robs)
 plot(subset.I, subset.Rfinal)
 
 ##Fit a non-linear regression of observable data on decision statistic
-require(mgcv)
 resp <- cbind(success=subset.Rfinal, fail=100-subset.Rfinal) ##Correct form for glm-like function
 icov <- subset.I ##Simple variable name for glm-like function
 fit <- gam(resp ~ s(icov), family=binomial)
@@ -59,23 +60,16 @@ hitPr <- function(icov, Robs, eps) {
     sapply(p, function(q) dbinom(seq(Robs-eps,Robs+eps), size=100, prob=q) %>% sum)
 }
 xx <- seq(min(icov), max(icov), length.out=100)
-plot(xx, hitPr(xx, Robs, 10), type='l')
+plot(xx, hitPr(xx, Robs, myeps), type='l')
 ##Estimate gamma just for training data
 temp <- predict(fit, type="response")
-gamma.train <- sapply(temp, function(q) dbinom(seq(Robs-eps,Robs+eps), size=100, prob=q) %>% sum)
+gamma.train <- sapply(temp, function(q) dbinom(seq(Robs-myeps,Robs+myeps), size=100, prob=q) %>% sum)
 
 ##Fit a non-linear regression of time remaining given decision statistic
-elapsed.total <- sapply(train.subset$train.it,
-                        function(i) {
-                            train.all[train.all$train.it==i,]$elapsed %>% max
-                        }) ##There must be a faster way to do this
-respT <- elapsed.total - train.subset$elapsed
+respT <- elapsed.final - train.subset$elapsed
 plot(subset.I, respT)
 fit.tbar <- gam(respT ~ s(icov))
 lines(xx, predict(fit.tbar, data.frame(icov=xx)), col="red")
-##T2bar <- predict(fit.tbar)
-##T1bar <- mean(train.subset$elapsed)
-##Tstan <- T1bar+mean(T2bar)
 
 ##Function to estimate efficiency
 eff.est <- make.effest(phi=icov, gamma=gamma.train, T2=predict(fit.tbar), T1bar=mean(train.subset$elapsed))

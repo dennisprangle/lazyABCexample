@@ -3,3 +3,4 @@
 export(SIRsample)
 export(SIRsim)
 export(lazyABC)
+export(make.effest)

@@ -9,6 +9,7 @@
 #'
 #' @return
 #' A function \code{effest(lambda)} which estimates relative efficiency of lazy ABC compared to standard ABC.
+#' @export
 make.effest <- function(phi, gamma, T2, T1bar) {
     n.train <- length(phi)
     effest <- function(lambda, plot=FALSE) {
