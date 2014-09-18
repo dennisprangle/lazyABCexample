@@ -66,8 +66,8 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
                          mc.preschedule=FALSE)
         samp <- do.call(rbind, samp)
     } else {
-        samp <- replicate(n=n.its, doiteration())
-        samp <- t(samp)
+        samp <- lapply(1:n.its, function(i){ doiteration(i) })
+        samp <- do.call(rbind, samp)
     }
     samp <- data.frame(samp)
     ttotal <- sum(samp$time)
