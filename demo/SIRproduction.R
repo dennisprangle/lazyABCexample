@@ -139,4 +139,5 @@ plot(xx, hitPr(xx, Robs, myeps), type='l', xlab="I(1000)", ylab=expression(hat(g
 plot(xx, aa, type='l', xlab="I(1000)", ylab=expression(alpha), yaxt="n", main="D")
 axis(2, at=0:4/4, labels=c("0","0.25","0.5","0.75","1"))
 lines(xx, bb, lty=2)
+rug(res.ord$ABCsample$phi)
 dev.off()
