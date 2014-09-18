@@ -88,6 +88,7 @@ proc.time()[3] - train.starttime + sum(elapsed.final)
 alpha.opt <- function(I1000) {
     T2bar <- predict(fit.tbar, data.frame(I1000=I1000))
     gamma <- hitPr(I1000, Robs, 10)
+    if (T2bar<=0) return(0) ##Only happens way out in tails where 0 is correct value (unlikely to happen at all unless n.train too small)
     min(1, lambda.opt * sqrt(gamma/T2bar))
 }
 res.lazy2 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
@@ -139,5 +140,5 @@ plot(xx, hitPr(xx, Robs, myeps), type='l', xlab="I(1000)", ylab=expression(hat(g
 plot(xx, aa, type='l', xlab="I(1000)", ylab=expression(alpha), yaxt="n", main="D")
 axis(2, at=0:4/4, labels=c("0","0.25","0.5","0.75","1"))
 lines(xx, bb, lty=2)
-rug(res.ord$ABCsample$phi)
+rug(res.lazy1$ABCsample$phi)
 dev.off()
