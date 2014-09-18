@@ -7,5 +7,5 @@
 #' @return Effective sample size
 #' @export
 ess <- function(w) {
-    mean(w^2) / mean(w)^2
+    length(w) * mean(w)^2 / mean(w^2)
 }
