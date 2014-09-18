@@ -18,7 +18,7 @@
 #' Prior is gamma=1 and beta~Gamma(5,1) (equivalently R0~Gamma(5,1))
 #' Random seeds \code{1:n.its} are used for the simulations. This is done in such a way that the ith simulation, if run to completion, will be the same regardless of alpha.
 #' 
-#' @return A list comprising: ABCsample - dataframe of R0, weight and dist; time - sum of elapsed time in each core.
+#' @return A list comprising: ABCsample - dataframe of R0, weight, dist and phi; time - sum of elapsed time in each core. n.b. dist is ABC distance and phi is the decision statistic, I(stopstep).
 #'
 #' @export
 lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
@@ -35,9 +35,11 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
             ##Simulation finished before condition to consider early stopping met
             early_stopping <- FALSE
             astar <- 1
+            phi <- NA
             ystar <- SIRsample(N=S0+I0+R0, R=sim1$R, n=n.subsample)
         } else {
             ##Consider early stopping
+            phi <- sim1$I
             astar <- alpha(sim1$I)
             if (udraw<=astar) { ##Continuation
                 early_stopping <- FALSE
@@ -49,13 +51,13 @@ lazyABC <- function(yobs, n.its, eps, stopstep, alpha=NULL, parallel=TRUE,
         }
         if (early_stopping) {
             t1 <- proc.time()[3]
-            out <- c(R0=betastar, weight=0, time=t1-t0, dist=NA)
+            out <- c(R0=betastar, weight=0, time=t1-t0, dist=NA, phi=phi)
         } else {
             d <- abs(ystar-yobs)
             lstarABC <- (d <= eps)
             w <- lstarABC / astar ##Assume importance weight equals prior
             t1 <- proc.time()[3]
-            out <- c(R0=betastar, weight=w, time=t1-t0, dist=d)
+            out <- c(R0=betastar, weight=w, time=t1-t0, dist=d, phi=phi)
         }
         return(out)
     }

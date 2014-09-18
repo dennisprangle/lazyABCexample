@@ -34,8 +34,10 @@ lazyABC(yobs, n.its, eps, stopstep, alpha = NULL, parallel = TRUE,
   \item{quiet}{Whether to suppress progress messages}
 }
 \value{
-A list comprising: ABCsample - dataframe of R0, weight and
-dist; time - sum of elapsed time in each core.
+A list comprising: ABCsample - dataframe of R0, weight,
+dist and phi; time - sum of elapsed time in each core. n.b.
+dist is ABC distance and phi is the decision statistic,
+I(stopstep).
 }
 \description{
 Perform rejection sampling lazy ABC on the SIR epidemic
