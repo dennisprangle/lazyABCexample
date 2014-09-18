@@ -14,7 +14,7 @@ res.ord <- lazyABC(Robs, 1E4, eps=myeps, stopstep=Inf,
 
 ##Ad-hoc lazy ABC
 res.lazy1 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
-                     alpha=function(I1000){ if(I1000<1000) { 0.1 } else { 1 } },
+                     alpha=function(I1000){ if(I1000<=1000) { 0.1 } else { 1 } },
                      S0=1E5-1E3, I0=1E3, R0=0)
 
 ##Sample training data
@@ -22,13 +22,14 @@ n.train <- 1E3
 R0.train <- rgamma(n.train, shape=3, scale=1)
 trainingsim <- function(i) {
     set.seed(i+n.train) ##(a) Reproducable (b) Different seeds to lazyABC code
-    out <- SIRsim(R0.train[i],1,1E5-1E3,1E3,0,0,thinning=1000)
+    out <- SIRsim(R0.train[i],1,1E5-1E3,1E3,0,0,thinning=1000)    
     out <- cbind(out, train.it=i)
     return(out)
 }
 temp <- mclapply(1:n.train, trainingsim, mc.preschedule=FALSE)
 
 ##Process training data
+train.starttime <- proc.time()[3] ##nb simulation time will be added later
 train.final <- sapply(1:n.train,
                       function(i) {
                           x <- temp[[i]]
@@ -46,6 +47,7 @@ train.1000 <- lapply(1:n.train,
                           x[2,] ##n.b. process runs at least 1000 steps so it's guaranteed that this row correspond to step 1000
                       }) ##State after 1000 steps from each training run
 train.1000 <- do.call(rbind, train.1000)
+
 
 ##Compare training data at a particular time step to observations
 I1000 <- train.1000$I ##I1000 from training data
@@ -96,6 +98,9 @@ lambda.opt <- temp$minimum
 ##Plot optimal choice of alpha
 eff.est(lambda.opt, plot=TRUE)
 
+##How long did tuning take?
+proc.time()[3] - train.starttime + sum(elapsed.final)
+
 ##Do lazy ABC with optimal alpha
 alpha.opt <- function(I1000) {
     T2bar <- predict(fit.tbar, data.frame(I1000=I1000))
@@ -105,3 +110,29 @@ alpha.opt <- function(I1000) {
 res.lazy2 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
                      alpha=alpha.opt,
                      S0=1E5-1E3, I0=1E3, R0=0)
+
+##Compare number of acceptances
+nrow(res.ord$ABCsample)
+nrow(res.lazy1$ABCsample)
+nrow(res.lazy2$ABCsample)
+
+##Compare ESS values
+ess(res.ord$ABCsample$weight)
+ess(res.lazy1$ABCsample$weight)
+ess(res.lazy2$ABCsample$weight)
+
+##Compare times
+res.ord$time
+res.lazy1$time
+res.lazy2$time
+
+##Relative efficiencies
+eff.ord <- ess(res.ord$ABCsample$weight) / res.ord$time
+eff.lazy1 <- ess(res.lazy1$ABCsample$weight) / res.lazy1$time
+eff.lazy2 <- ess(res.lazy2$ABCsample$weight) / res.lazy2$time
+eff.lazy1 / eff.ord
+eff.lazy2 / eff.ord
+
+##What weights did lazy ABC have?
+table(res.lazy1$ABCsample$weight)
+table(res.lazy2$ABCsample$weight)

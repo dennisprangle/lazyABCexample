@@ -1,1 +1,2 @@
-SIRdraft     First draft of my lazy ABC SIR analysis
+SIRexample     Lazy ABC SIR analysis, showing plots during analysis
+SIRproduction  Same analysis, producing paper output without pausing
