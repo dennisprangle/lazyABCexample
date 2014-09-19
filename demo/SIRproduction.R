@@ -188,8 +188,9 @@ table(res.lazy3$ABCsample$weight)
 
 ##Plot results
 xx <- seq(min(I1000), max(I1000), length.out=200)
-aa <- sapply(xx, alpha.opt) ##tuned alpha
+aa <- sapply(xx, alpha.opt) ##standard tuning alpha
 bb <- ifelse(xx<1000, 0.1, 1) ##ad-hoc alpha
+cc <- sapply(xx, alpha.opt.cons) ##conservative tuning alpha
 zz <- predict(fit.resp, newdata=data.frame(I1000=xx), type="response") ##y predictions
 uu <- predict(fit.tbar, data.frame(I1000=xx), type="response") ##T2 predictions
 cairo_pdf(file="SIRout.pdf", width=6, height=5, pointsize=10)
@@ -202,8 +203,10 @@ abline(h=Robs, lty=3)
 plot(I1000, respT, pch=".", col=gray(0.2), xlab="I(1000)", ylab=expression("T"[2]), main="B")
 lines(xx, uu, lwd=2)
 plot(xx, hitPr(xx, Robs, myeps), type='l', xlab="I(1000)", ylab=expression(hat(gamma)), main="C")
+lines(xx, predict(fit.cons, newdata=data.frame(I1000=xx), type="response"), lty=2)
 plot(xx, aa, type='l', xlab="I(1000)", ylab=expression(alpha), yaxt="n", main="D")
 axis(2, at=0:4/4, labels=c("0","0.25","0.5","0.75","1"))
 lines(xx, bb, lty=2)
+lines(xx, cc, lty=3)
 rug(res.lazy1$ABCsample$phi)
 dev.off()
