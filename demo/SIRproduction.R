@@ -122,8 +122,8 @@ train.obs <- train.final[train.1000$train.it] ##Observations corresponding to I1
 train.diff <- abs(train.obs - Robs)
 
 ##Estimate gamma
-train.z <- (train.diff <= 2)
-fit.cons <- gam(z ~ s(I1000), family=binomial)
+train.z <- (train.diff <= 3)
+fit.cons <- gam(train.z ~ s(I1000), family=binomial)
 gammacons.train <- predict(fit.cons, type="response")
 
 ##Fit a non-linear regression of time remaining given decision statistic
@@ -202,11 +202,14 @@ lines(xx, qbinom(p=0.975, size=100, prob=zz), lty=3, lwd=2)
 abline(h=Robs, lty=3)
 plot(I1000, respT, pch=".", col=gray(0.2), xlab="I(1000)", ylab=expression("T"[2]), main="B")
 lines(xx, uu, lwd=2)
-plot(xx, hitPr(xx, Robs, myeps), type='l', xlab="I(1000)", ylab=expression(hat(gamma)), main="C")
-lines(xx, predict(fit.cons, newdata=data.frame(I1000=xx), type="response"), lty=2)
+plot(xx, predict(fit.cons, newdata=data.frame(I1000=xx), type="response"),
+     type='l', xlab="I(1000)", ylab=expression(hat(gamma)), lty=3, main="C")
+lines(xx, hitPr(xx, Robs, myeps))
+rug(I1000[train.z==0], side=1, col=gray(0, alpha=0.5))
+rug(I1000[train.z==1], side=3, col=gray(0, alpha=0.5))
 plot(xx, aa, type='l', xlab="I(1000)", ylab=expression(alpha), yaxt="n", main="D")
 axis(2, at=0:4/4, labels=c("0","0.25","0.5","0.75","1"))
 lines(xx, bb, lty=2)
 lines(xx, cc, lty=3)
-rug(res.lazy1$ABCsample$phi)
+rug(res.lazy1$ABCsample$phi, col=gray(0, alpha=0.5))
 dev.off()
