@@ -109,41 +109,15 @@ res.lazy2 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
                      alpha=alpha.opt,
                      S0=1E5-1E3, I0=1E3, R0=0)
 
-##CONSERVATIVE TUNING (nb repeat everything necessary so timing correct)
-train.starttime <- proc.time()[3] ##nb simulation time will be added later
-##Process training data
-train.final <- sapply(1:n.train,
-                      function(i) {
-                          x <- train.samp[[i]]
-                          myR <- tail(x, n=1)$R
-                          SIRsample(1E5+1, myR, 100)
-                      }) ##Observation from each training run
-elapsed.final <- sapply(1:n.train,
-                        function(i) {
-                            x <- train.samp[[i]]
-                            tail(x, n=1)$elapsed
-                      }) ##Total elapsed time of each training run
-train.1000 <- lapply(1:n.train,
-                      function(i) {
-                          x <- train.samp[[i]]
-                          x[2,] ##n.b. process runs at least 1000 steps so it's guaranteed that this row correspond to step 1000
-                      }) ##State after 1000 steps from each training run
-train.1000 <- do.call(rbind, train.1000)
-
-##Compare training data at a particular time step to observations
-I1000 <- train.1000$I ##I1000 from training data
-train.obs <- train.final[train.1000$train.it] ##Observations corresponding to I1000
-train.diff <- abs(train.obs - Robs)
-
+##CONSERVATIVE TUNING
 ##Estimate gamma
 train.z <- (train.diff <= 3)
 fit.cons <- gam(train.z ~ s(I1000), family=binomial)
 gammacons.train <- predict(fit.cons, type="response")
-
-##Fit a non-linear regression of time remaining given decision statistic
-respT <- elapsed.final - train.1000$elapsed
-fit.tbar <- gam(respT ~ s(I1000), gaussian(link = "log"))
-T2bar.train <- predict(fit.tbar, type="response")
+##Plot gamma estimate
+plot(I1000, predict(fit.cons, type="response"))
+rug(I1000[train.z==0], side=1)
+rug(I1000[train.z==1], side=3)
 
 ##Create function to estimate efficiency
 eff.est.cons <- make.effest(phi=I1000, gamma=gammacons.train, T2=T2bar.train, T1bar=mean(train.1000$elapsed))
@@ -153,9 +127,8 @@ tomin <- function(lambda) -eff.est.cons(lambda)
 temp <- optimise(tomin, lower=0, upper=1E4)
 temp
 lambda.opt.cons <- temp$minimum
-
-##How long did tuning take?
-proc.time()[3] - train.starttime + sum(elapsed.final)
+##Plot optimal alpha
+eff.est.cons(lambda.opt.cons, plot=TRUE)
 
 ##Do lazy ABC with optimal alpha
 alpha.opt.cons <- function(I1000) {
