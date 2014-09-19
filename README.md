@@ -1,14 +1,19 @@
 lazyABCexample
 ==============
 
-This R package implements a simple SIR example from my lazy ABC paper.
+This R package implements an epidemics example from
 
-nb 1
-----
+"Lazy ABC" Dennis Prangle (2014)
 
-This is the development version of the example.
+Available at http://arxiv.org/abs/1405.7867
 
-nb 2
-----
+**nb this example appears in v2 only (still in preparation)**
 
-The example will appear in the next version of the paper.
+
+The package contains commands to simulate from the model of interest (SIRsim) and to perform lazy ABC, or standard ABC as a special case (lazyABC).
+Two scripts are also supplied as demos.
+Both perform the analysis in the paper.
+"SIRproduction" is the exact code used in the paper.
+"SIRexample" is a more user-friendly version (less code, more explanatory plots).
+The scripts can be run via "demo(SIRexample)" or "demo(SIRproduction)".
+
