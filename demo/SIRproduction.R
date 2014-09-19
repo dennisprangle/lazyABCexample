@@ -186,6 +186,19 @@ table(res.lazy1$ABCsample$weight)
 table(res.lazy2$ABCsample$weight)
 table(res.lazy3$ABCsample$weight)
 
+##Estimates of posterior mean and variance
+post <- function(res) {
+    x <- res$ABCsample$R0
+    w <- res$ABCsample$weight
+    Ex <- sum(x*w) / sum(w)
+    Ex2 <- sum(x^2*w) / sum(w)
+    c(mean=Ex, sd=sqrt(Ex2-Ex^2))
+}
+post(res.ord)
+post(res.lazy1)
+post(res.lazy2)
+post(res.lazy3)
+
 ##Plot results
 xx <- seq(min(I1000), max(I1000), length.out=200)
 aa <- sapply(xx, alpha.opt) ##standard tuning alpha

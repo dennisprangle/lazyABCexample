@@ -1,18 +1,19 @@
 require(magrittr)
 require(mgcv)
 require(parallel)
+require(ggplot2)
 ##Simulate true data
 R0.true <- 2
 set.seed(1)
 Rtrue <- SIRsim(R0.true,1,1E5-1E3,1E3,0,0)$R
 Robs <- SIRsample(1E5, Rtrue, 100) ##73
 
-##Ordinary ABC
+##ORDINARY ABC
 myeps <- 1
 res.ord <- lazyABC(Robs, 1E4, eps=myeps, stopstep=Inf,
                    S0=1E5-1E3, I0=1E3, R0=0)
 
-##Ad-hoc lazy ABC
+##AD-HOC LAZY ABC
 res.lazy1 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
                      alpha=function(I1000){ if(I1000<=1000) { 0.1 } else { 1 } },
                      S0=1E5-1E3, I0=1E3, R0=0)
@@ -26,28 +27,27 @@ trainingsim <- function(i) {
     out <- cbind(out, train.it=i)
     return(out)
 }
-temp <- mclapply(1:n.train, trainingsim, mc.preschedule=FALSE)
+train.samp <- mclapply(1:n.train, trainingsim, mc.preschedule=FALSE)
 
+##STANDARD TUNING
 ##Process training data
-train.starttime <- proc.time()[3] ##nb simulation time will be added later
 train.final <- sapply(1:n.train,
                       function(i) {
-                          x <- temp[[i]]
+                          x <- train.samp[[i]]
                           myR <- tail(x, n=1)$R
                           SIRsample(1E5+1, myR, 100)
                       }) ##Observation from each training run
 elapsed.final <- sapply(1:n.train,
                         function(i) {
-                            x <- temp[[i]]
+                            x <- train.samp[[i]]
                             tail(x, n=1)$elapsed
                       }) ##Total elapsed time of each training run
 train.1000 <- lapply(1:n.train,
                       function(i) {
-                          x <- temp[[i]]
+                          x <- train.samp[[i]]
                           x[2,] ##n.b. process runs at least 1000 steps so it's guaranteed that this row correspond to step 1000
                       }) ##State after 1000 steps from each training run
 train.1000 <- do.call(rbind, train.1000)
-
 
 ##Compare training data at a particular time step to observations
 I1000 <- train.1000$I ##I1000 from training data
@@ -81,14 +81,15 @@ gamma.train <- sapply(temp, function(q) dbinom(seq(Robs-myeps,Robs+myeps), size=
 
 ##Fit a non-linear regression of time remaining given decision statistic
 respT <- elapsed.final - train.1000$elapsed
-fit.tbar <- gam(respT ~ s(I1000))
+fit.tbar <- gam(respT ~ s(I1000), gaussian(link = "log"))
+T2bar.train <- predict(fit.tbar, type="response")
 
 ##Plot time regression against data as a check
 plot(I1000, respT)
-lines(xx, predict(fit.tbar, data.frame(I1000=xx)), col="red")
+lines(xx, predict(fit.tbar, data.frame(I1000=xx), type="response"), col="red")
 
-##Function to estimate efficiency
-eff.est <- make.effest(phi=I1000, gamma=gamma.train, T2=predict(fit.tbar), T1bar=mean(train.1000$elapsed))
+##Create function to estimate efficiency
+eff.est <- make.effest(phi=I1000, gamma=gamma.train, T2=T2bar.train, T1bar=mean(train.1000$elapsed))
 
 ##Choose lambda to optimise efficiency
 tomin <- function(lambda) -eff.est(lambda)
@@ -98,12 +99,9 @@ lambda.opt <- temp$minimum
 ##Plot optimal choice of alpha
 eff.est(lambda.opt, plot=TRUE)
 
-##How long did tuning take?
-proc.time()[3] - train.starttime + sum(elapsed.final)
-
 ##Do lazy ABC with optimal alpha
 alpha.opt <- function(I1000) {
-    T2bar <- predict(fit.tbar, data.frame(I1000=I1000))
+    T2bar <- predict(fit.tbar, data.frame(I1000=I1000), type="response")
     gamma <- hitPr(I1000, Robs, 10)
     min(1, lambda.opt * sqrt(gamma/T2bar))
 }
@@ -111,28 +109,112 @@ res.lazy2 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
                      alpha=alpha.opt,
                      S0=1E5-1E3, I0=1E3, R0=0)
 
+##CONSERVATIVE TUNING (nb repeat everything necessary so timing correct)
+train.starttime <- proc.time()[3] ##nb simulation time will be added later
+##Process training data
+train.final <- sapply(1:n.train,
+                      function(i) {
+                          x <- train.samp[[i]]
+                          myR <- tail(x, n=1)$R
+                          SIRsample(1E5+1, myR, 100)
+                      }) ##Observation from each training run
+elapsed.final <- sapply(1:n.train,
+                        function(i) {
+                            x <- train.samp[[i]]
+                            tail(x, n=1)$elapsed
+                      }) ##Total elapsed time of each training run
+train.1000 <- lapply(1:n.train,
+                      function(i) {
+                          x <- train.samp[[i]]
+                          x[2,] ##n.b. process runs at least 1000 steps so it's guaranteed that this row correspond to step 1000
+                      }) ##State after 1000 steps from each training run
+train.1000 <- do.call(rbind, train.1000)
+
+##Compare training data at a particular time step to observations
+I1000 <- train.1000$I ##I1000 from training data
+train.obs <- train.final[train.1000$train.it] ##Observations corresponding to I1000
+train.diff <- abs(train.obs - Robs)
+
+##Estimate gamma
+train.z <- (train.diff <= 3)
+fit.cons <- gam(train.z ~ s(I1000), family=binomial)
+gammacons.train <- predict(fit.cons, type="response")
+
+##Fit a non-linear regression of time remaining given decision statistic
+respT <- elapsed.final - train.1000$elapsed
+fit.tbar <- gam(respT ~ s(I1000), gaussian(link = "log"))
+T2bar.train <- predict(fit.tbar, type="response")
+
+##Create function to estimate efficiency
+eff.est.cons <- make.effest(phi=I1000, gamma=gammacons.train, T2=T2bar.train, T1bar=mean(train.1000$elapsed))
+
+##Choose lambda to optimise efficiency
+tomin <- function(lambda) -eff.est.cons(lambda)
+temp <- optimise(tomin, lower=0, upper=1E4)
+temp
+lambda.opt.cons <- temp$minimum
+
+##How long did tuning take?
+proc.time()[3] - train.starttime + sum(elapsed.final)
+
+##Do lazy ABC with optimal alpha
+alpha.opt.cons <- function(I1000) {
+    T2bar <- predict(fit.tbar, data.frame(I1000=I1000), type="response")
+    gamma <- predict(fit.cons, data.frame(I1000=I1000), type="response")
+    min(1, lambda.opt.cons * sqrt(gamma/T2bar))
+}
+res.lazy3 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
+                     alpha=alpha.opt.cons,
+                     S0=1E5-1E3, I0=1E3, R0=0)
+
+##EXAMINE OUTPUT
 ##Compare number of acceptances
 nrow(res.ord$ABCsample)
 nrow(res.lazy1$ABCsample)
 nrow(res.lazy2$ABCsample)
+nrow(res.lazy3$ABCsample)
 
 ##Compare ESS values
 ess(res.ord$ABCsample$weight)
 ess(res.lazy1$ABCsample$weight)
 ess(res.lazy2$ABCsample$weight)
+ess(res.lazy3$ABCsample$weight)
 
 ##Compare times
 res.ord$time
 res.lazy1$time
 res.lazy2$time
+res.lazy3$time
 
 ##Relative efficiencies
 eff.ord <- ess(res.ord$ABCsample$weight) / res.ord$time
 eff.lazy1 <- ess(res.lazy1$ABCsample$weight) / res.lazy1$time
 eff.lazy2 <- ess(res.lazy2$ABCsample$weight) / res.lazy2$time
+eff.lazy3 <- ess(res.lazy3$ABCsample$weight) / res.lazy3$time
 eff.lazy1 / eff.ord
 eff.lazy2 / eff.ord
+eff.lazy3 / eff.ord
 
 ##What weights did lazy ABC have?
 table(res.lazy1$ABCsample$weight)
 table(res.lazy2$ABCsample$weight)
+table(res.lazy3$ABCsample$weight)
+
+##Estimates of posterior mean and variance
+post <- function(res) {
+    x <- res$ABCsample$R0
+    w <- res$ABCsample$weight
+    Ex <- sum(x*w) / sum(w)
+    Ex2 <- sum(x^2*w) / sum(w)
+    c(mean=Ex, sd=sqrt(Ex2-Ex^2))
+}
+post(res.ord)
+post(res.lazy1)
+post(res.lazy2)
+post(res.lazy3)
+
+##Estimated posterior histograms
+qplot(x=R0, weight=weight, data=res.ord$ABCsample, binwidth=0.1)
+qplot(x=R0, weight=weight, data=res.lazy1$ABCsample, binwidth=0.1)
+qplot(x=R0, weight=weight, data=res.lazy2$ABCsample, binwidth=0.1)
+qplot(x=R0, weight=weight, data=res.lazy3$ABCsample, binwidth=0.1)
