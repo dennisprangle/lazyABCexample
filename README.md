@@ -16,4 +16,5 @@ Both perform the analysis in the paper.
 "SIRproduction" is the exact code used in the paper.
 "SIRexample" is a more user-friendly version (less code, more explanatory plots).
 The scripts can be run via "demo(SIRexample)" or "demo(SIRproduction)".
+They use parallel processing via "mclapply", so the user may wish to run "options(mc.cores=X)" for some appropriate value of X before execution.
 
