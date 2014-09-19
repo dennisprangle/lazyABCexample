@@ -73,7 +73,7 @@ respT <- elapsed.final - train.1000$elapsed
 fit.tbar <- gam(respT ~ s(I1000), gaussian(link = "log"))
 
 ##Function to estimate efficiency
-eff.est <- make.effest(phi=I1000, gamma=gamma.train, T2=predict(fit.tbar), T1bar=mean(train.1000$elapsed))
+eff.est <- make.effest(phi=I1000, gamma=gamma.train, T2=predict(fit.tbar, type="response"), T1bar=mean(train.1000$elapsed))
 
 ##Choose lambda to optimise efficiency
 tomin <- function(lambda) -eff.est(lambda)
@@ -86,9 +86,8 @@ proc.time()[3] - train.starttime + sum(elapsed.final)
 
 ##Do lazy ABC with optimal alpha
 alpha.opt <- function(I1000) {
-    T2bar <- predict(fit.tbar, data.frame(I1000=I1000))
+    T2bar <- predict(fit.tbar, data.frame(I1000=I1000), type="response")
     gamma <- hitPr(I1000, Robs, 10)
-    if (T2bar<=0) return(0) ##Only happens way out in tails where 0 is correct value (unlikely to happen at all unless n.train too small)
     min(1, lambda.opt * sqrt(gamma/T2bar))
 }
 res.lazy2 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
