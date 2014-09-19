@@ -125,7 +125,7 @@ xx <- seq(min(I1000), max(I1000), length.out=200)
 aa <- sapply(xx, alpha.opt) ##tuned alpha
 bb <- ifelse(xx<1000, 0.1, 1) ##ad-hoc alpha
 zz <- predict(fit.resp, newdata=data.frame(I1000=xx), type="response") ##y predictions
-uu <- predict(fit.tbar, data.frame(I1000=xx)) ##T2 predictions
+uu <- predict(fit.tbar, data.frame(I1000=xx), type="response") ##T2 predictions
 cairo_pdf(file="SIRout.pdf", width=6, height=5, pointsize=10)
 par(mfrow=c(2,2), mar=c(4, 4.5, 2, 1.5) + 0.1 )
 plot(I1000, train.obs, pch=".", xlab="I(1000)", ylab="y", col=gray(0.2), main="A")
