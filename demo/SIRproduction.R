@@ -26,24 +26,24 @@ trainingsim <- function(i) {
     out <- cbind(out, train.it=i)
     return(out)
 }
-temp <- mclapply(1:n.train, trainingsim, mc.preschedule=FALSE)
+train.samp <- mclapply(1:n.train, trainingsim, mc.preschedule=FALSE)
 
 ##Process training data
 train.starttime <- proc.time()[3] ##nb simulation time will be added later
 train.final <- sapply(1:n.train,
                       function(i) {
-                          x <- temp[[i]]
+                          x <- train.samp[[i]]
                           myR <- tail(x, n=1)$R
                           SIRsample(1E5+1, myR, 100)
                       }) ##Observation from each training run
 elapsed.final <- sapply(1:n.train,
                         function(i) {
-                            x <- temp[[i]]
+                            x <- train.samp[[i]]
                             tail(x, n=1)$elapsed
                       }) ##Total elapsed time of each training run
 train.1000 <- lapply(1:n.train,
                       function(i) {
-                          x <- temp[[i]]
+                          x <- train.samp[[i]]
                           x[2,] ##n.b. process runs at least 1000 steps so it's guaranteed that this row correspond to step 1000
                       }) ##State after 1000 steps from each training run
 train.1000 <- do.call(rbind, train.1000)
@@ -70,7 +70,7 @@ gamma.train <- sapply(temp, function(q) dbinom(seq(Robs-myeps,Robs+myeps), size=
 
 ##Fit a non-linear regression of time remaining given decision statistic
 respT <- elapsed.final - train.1000$elapsed
-fit.tbar <- gam(respT ~ s(I1000))
+fit.tbar <- gam(respT ~ s(I1000), gaussian(link = "log"))
 
 ##Function to estimate efficiency
 eff.est <- make.effest(phi=I1000, gamma=gamma.train, T2=predict(fit.tbar), T1bar=mean(train.1000$elapsed))
