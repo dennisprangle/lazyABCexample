@@ -125,7 +125,6 @@ train.diff <- abs(train.obs - Robs)
 train.z <- (train.diff <= 2)
 fit.cons <- gam(z ~ s(I1000), family=binomial)
 gammacons.train <- predict(fit.cons, type="response")
-eff.est <- make.effest(phi=I1000, gamma=gammacons.train, T2=T2bar.train, T1bar=mean(train.1000$elapsed))
 
 ##Fit a non-linear regression of time remaining given decision statistic
 respT <- elapsed.final - train.1000$elapsed
@@ -133,7 +132,7 @@ fit.tbar <- gam(respT ~ s(I1000), gaussian(link = "log"))
 T2bar.train <- predict(fit.tbar, type="response")
 
 ##Create function to estimate efficiency
-eff.est.cons <- make.effest(phi=I1000, gamma=gamma.train, T2=T2bar.train, T1bar=mean(train.1000$elapsed))
+eff.est.cons <- make.effest(phi=I1000, gamma=gammacons.train, T2=T2bar.train, T1bar=mean(train.1000$elapsed))
 
 ##Choose lambda to optimise efficiency
 tomin <- function(lambda) -eff.est.cons(lambda)
@@ -148,7 +147,7 @@ proc.time()[3] - train.starttime + sum(elapsed.final)
 alpha.opt.cons <- function(I1000) {
     T2bar <- predict(fit.tbar, data.frame(I1000=I1000), type="response")
     gamma <- predict(fit.cons, data.frame(I1000=I1000), type="response")
-    min(1, lambda.opt * sqrt(gamma/T2bar))
+    min(1, lambda.opt.cons * sqrt(gamma/T2bar))
 }
 res.lazy3 <- lazyABC(Robs, 1E4, eps=myeps, stopstep=1000,
                      alpha=alpha.opt.cons,
