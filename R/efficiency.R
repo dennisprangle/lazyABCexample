@@ -15,8 +15,8 @@ make.effest <- function(phi, gamma, T2, T1bar) {
     effest <- function(lambda, plot=FALSE) {
         alpha <- pmin(1, lambda*sqrt(gamma/T2)) #Continuation probabilities
         if (plot) plot(phi, alpha)
-        sumw2.base <- sum(gamma) ##Sum of squared weights under standard ABC
-        sumw2 <- sum(gamma/alpha, na.rm=TRUE) ##Expected sum of weights^2.  na.rm takes care of cases where gamma=alpha=0.
+        sumw2.base <- mean(gamma) ##Mean of squared weights under standard ABC
+        sumw2 <- mean(gamma/alpha, na.rm=TRUE) ##Expected mean of weights^2.  na.rm takes care of cases where gamma=alpha=0.
         T2bar <- mean(T2)
         t.base <- (T1bar+T2bar)*n.train ##Expected time under standard ABC
         t.lazy <- T1bar*n.train + T2bar*sum(alpha) ##E(1st stage time)*number of iterations + E(2nd stage time)*expected number of continuations
