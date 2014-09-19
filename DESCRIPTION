@@ -1,8 +1,8 @@
 Package: lazyABCexample
 Type: Package
 Title: Implement "Lazy ABC" paper example
-Version: 0.1
-Date: 2014-09-15
+Version: 0.99
+Date: 2014-09-19
 Author: Dennis Prangle
 Maintainer: Dennis Prangle <d.b.prangle@reading.ac.uk>
 Depends:
@@ -11,5 +11,5 @@ Suggests:
     mgcv,
     magrittr,
     ggplot2
-Description: Implements the epidemics example from the the "lazy ABC" paper.
+Description: Implements the epidemics example from the "Lazy ABC" paper.
 License: GPL (>=2)
