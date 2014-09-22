@@ -147,6 +147,9 @@ nrow(res.lazy1$ABCsample)
 nrow(res.lazy2$ABCsample)
 nrow(res.lazy3$ABCsample)
 
+##Doublecheck conservative tuning acceptances are a subset of ordinary ABC ones
+table(rownames(res.lazy3$ABCsample) %in% rownames(res.ord$ABCsample))
+
 ##Compare ESS values
 ess(res.ord$ABCsample$weight)
 ess(res.lazy1$ABCsample$weight)
