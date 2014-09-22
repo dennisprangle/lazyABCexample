@@ -3,7 +3,7 @@
 #' Implements lazy ABC on a SIR epidemic application.
 #'
 #' This R package implements an epidemics example from "Lazy ABC" Dennis Prangle (2014), available at http://arxiv.org/abs/1405.7867
-#' **nb this example appears in v2 only (still in preparation)**
+#' **nb this example appears from v2 of this paper**
 #'
 #' The package contains commands to simulate from the model of interest (SIRsim) and to perform lazy ABC, or standard ABC as a special case (lazyABC).
 #' Two scripts are also supplied as demos.
