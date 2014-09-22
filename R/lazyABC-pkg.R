@@ -10,7 +10,7 @@
 #' Both perform the analysis in the paper.
 #' \code{SIRproduction} is the exact code used in the paper.
 #' \code{SIRexample} is a more user-friendly version (less code, more explanatory plots).
-#' The scripts can be run via \code{demo(SIRexample)} or \code{demo(SIRproduction)}.
+#' The scripts can be run by \code{demo(SIRexample)} or \code{demo(SIRproduction)}.
 #' They use parallel processing via \code{mclapply}, so the user may wish to run \code{options(mc.cores=X)} for some appropriate value of X before execution.
 #'
 #' @name
